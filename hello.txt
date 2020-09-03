@@ -1,0 +1,3 @@
+<h1>Hello golang</h1>
+<h2>How are you ?</h2>
+<img  id='k1' src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1599155867618&di=e90c87c0d595a6f65e7e8b0ad61b0b4a&imgtype=0&src=http%3A%2F%2Fstatic.1sapp.com%2Fqupost%2Fimages%2F2019%2F04%2F06%2F1554507541697636948.jpg"/>
