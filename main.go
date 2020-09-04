@@ -9,19 +9,22 @@ import (
 func main() {
 	r := gin.Default()
 
-	r.GET("/json", func(c *gin.Context) {
-		//方法一:使用map
-		// data := map[string]interface{}{
-		// 	"name":    "小王子",
-		// 	"message": "hello world",
-		// 	"age":     18,
-		// }
-		//gin.H就是 map[string] interface {} 这个interface{}就是空接口类型，可以存储任何值
+	r.GET("/web", func(c *gin.Context) {
+		//获取浏览器query 参数
+		username := c.DefaultQuery("username", "小丸子") //带默认值,娶不到就是默认值
+		address := c.Query("address")
+
+		name, ok := c.GetQuery("name") //娶不到就是sb
+		if !ok {
+			name = "sb"
+		}
 		c.JSON(http.StatusOK, gin.H{
-			"name":    "小王子",
-			"message": "hello world",
-			"age":     18,
+			"message":  "ok",
+			"username": username,
+			"address":  address,
+			"name":     name,
 		})
 	})
+
 	r.Run()
 }
