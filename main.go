@@ -1,21 +1,19 @@
 package main
 
 import (
-	"fmt"
-	"io/ioutil"
-	"net/http"
+	"github.com/gin-gonic/gin"
 )
 
-func SayHello(w http.ResponseWriter, r *http.Request) {
-	//往文件里面写东西的函数
-	b, _ := ioutil.ReadFile("./hello.txt")
-	_, _ = fmt.Fprintln(w, string(b))
-}
-
 func main() {
-	http.HandleFunc("/hello", SayHello)
-	err := http.ListenAndServe(":9090", nil) //这里冒号别搞丢了
-	if err != nil {
-		fmt.Printf("http serve failed: %v\n", err)
-	}
+	r := gin.Default() //返回默认路由引擎
+
+	//指定用户使用GET请求访问/ping 时，执行func。。这个函数
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(200, gin.H{ //H是格 map，自己点进去看
+			"message": "pong",
+		})
+	})
+	//启动服务
+	r.Run()
+
 }
