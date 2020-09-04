@@ -7,31 +7,21 @@ import (
 )
 
 func main() {
-	r := gin.Default() //返回默认路由引擎
+	r := gin.Default()
 
-	//指定用户使用GET请求访问/ping 时，执行func。。这个函数
-	r.GET("/hello", func(c *gin.Context) {
-		c.JSON(200, gin.H{ //H是格 map，自己点进去看
-			"method": "get",
-		})
-	})
-	r.POST("/hello", func(c *gin.Context) {
+	r.GET("/json", func(c *gin.Context) {
+		//方法一:使用map
+		// data := map[string]interface{}{
+		// 	"name":    "小王子",
+		// 	"message": "hello world",
+		// 	"age":     18,
+		// }
+		//gin.H就是 map[string] interface {} 这个interface{}就是空接口类型，可以存储任何值
 		c.JSON(http.StatusOK, gin.H{
-			"method": "POST",
+			"name":    "小王子",
+			"message": "hello world",
+			"age":     18,
 		})
 	})
-
-	r.PUT("/hello", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"method": "PUT",
-		})
-	})
-	r.DELETE("/hello", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"method": "DELETE",
-		})
-	})
-	//启动服务
 	r.Run()
-
 }
