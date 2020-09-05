@@ -6,23 +6,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+//go mod tidy 看依赖包是否在go mod 中列出来
 func main() {
 	r := gin.Default()
 
-	r.GET("/web", func(c *gin.Context) {
-		//获取浏览器query 参数
-		username := c.DefaultQuery("username", "小丸子") //带默认值,娶不到就是默认值
-		address := c.Query("address")
-
-		name, ok := c.GetQuery("name") //娶不到就是sb
-		if !ok {
-			name = "sb"
-		}
+	r.POST("/login", func(c *gin.Context) {
+		// username := c.PostForm("username")
+		password := c.PostForm("password")
+		// DefaultPostForm取不到值时会返回指定的默认值
+		//username := c.DefaultPostForm("username", "小王子")
+		username, ok := c.GetPostForm("username")
 		c.JSON(http.StatusOK, gin.H{
-			"message":  "ok",
 			"username": username,
-			"address":  address,
-			"name":     name,
+			"password": password,
+			"ok":       ok,
 		})
 	})
 
