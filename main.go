@@ -10,16 +10,14 @@ import (
 func main() {
 	r := gin.Default()
 
-	r.POST("/login", func(c *gin.Context) {
-		// username := c.PostForm("username")
-		password := c.PostForm("password")
-		// DefaultPostForm取不到值时会返回指定的默认值
-		//username := c.DefaultPostForm("username", "小王子")
-		username, ok := c.GetPostForm("username")
+	r.GET("user/search/:username/:address", func(c *gin.Context) {
+		// 这两个都不能忽略，不然就访问不到该路由
+		username := c.Param("username")
+		address := c.Param("address")
 		c.JSON(http.StatusOK, gin.H{
+			"message":  "ok",
 			"username": username,
-			"password": password,
-			"ok":       ok,
+			"address":  address,
 		})
 	})
 
