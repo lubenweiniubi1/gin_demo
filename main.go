@@ -10,31 +10,84 @@ import (
 func main() {
 	r := gin.Default()
 
+	// r.HEAD()
 	r.GET("/index", func(c *gin.Context) {
-		// c.JSON(http.StatusOK, gin.H{
-		// 	"status": "ok",
-		// })
-		c.Redirect(http.StatusMovedPermanently, "http://www.sogo.com") //这里地址都变了
+		c.JSON(http.StatusOK, gin.H{
+			"method": "GET",
+		})
+	})
+	r.POST("/index", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"method": "POST",
+		})
+	})
+	r.DELETE("/index", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"method": "DELETE",
+		})
+	})
+	r.PUT("/index", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"method": "PUT",
+		})
+	})
+	r.Any("/anny", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"method": "PUT",
+		})
+	})
+	r.NoRoute(func(c *gin.Context) {
+		c.JSON(http.StatusNotFound, gin.H{
+			"code": "404",
+		})
 	})
 
-	r.GET("/a", func(c *gin.Context) {
-		c.JSON(http.StatusPermanentRedirect, gin.H{
-			"message": "你好 ，这里到路由a了",
+	//我们可以将拥有共同URL前缀的路由划分为一个路由组。习惯性一对{}包裹同组的路由，这只是为了看着清晰，你用不用{}包裹功能上没什么区别。
+	//视频的首页和详情页
+	videoGroup := r.Group("/video")
+	{
+		videoGroup.GET("/index", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{
+				"msg": "/video/index",
+			})
 		})
-		c.Request.URL.Path = "/b" //把请求的URI修改
-		r.HandleContext(c)        //继续后续处理
+
+		videoGroup.GET("/cc", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{
+				"msg": "/video/index",
+			})
+		})
+
+		videoGroup.GET("/dd", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{
+				"msg": "/video/index",
+			})
+		})
+		videoGroup.GET("/oo", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{
+				"msg": "/video/index",
+			})
+		})
+
+		// 嵌套路由组
+		xx := videoGroup.Group("xx")
+		xx.GET("/oo", func(c *gin.Context) {})
+	}
+
+	r.GET("/shop/index", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"msg": "/shop/index",
+		})
 	})
-	r.GET("/b", func(c *gin.Context) {
-		c.JSON(http.StatusPermanentRedirect, gin.H{
-			"message": "你好 ，这里重定向到路由b了",
-		})
-		c.Request.URL.Path = "/c"
-		r.HandleContext(c)
-	})
-	r.GET("/c", func(c *gin.Context) {
-		c.JSON(http.StatusPermanentRedirect, gin.H{
-			"message": "这里是c",
-		})
+
+	//any 请求大杂烩
+	r.Any("/user", func(c *gin.Context) {
+		switch c.Request.Method {
+		case "GET":
+			return
+		case http.MethodPost: //尽量用常量
+			return
+		}
 	})
 	r.Run(":8080")
 }
