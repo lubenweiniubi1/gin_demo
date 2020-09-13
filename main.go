@@ -2,105 +2,50 @@ package main
 
 import (
 	"fmt"
-	"net/http"
-	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
-//handlefunc 类型
-func indexHandler(c *gin.Context) {
-	fmt.Println("index")
-	name, _ := c.Get("name")
-	c.JSON(http.StatusOK, gin.H{
-		"msg": name,
-	})
+//_ 表示没有直接用到他
+
+//UserInfo --> 数据表
+type UserInfo struct {
+	ID    uint
+	Name  string
+	Gener string
+	Hobby string
 }
 
-//定义一个中间件 m1
-//统计耗时
-func m1(c *gin.Context) {
-	fmt.Println("m1 in ...")
-	//计时
-	start := time.Now()
-	go funcXX(c.Copy()) //在funcXX中只能使用c的拷贝,使用只读的对象
-	c.Next()            //调用后续的处理函数,这里十分重要！！！
-	// c.Abort()//阻止调用后续的处理函数
-	cost := time.Since(start)
-	fmt.Printf("cost:%v\n", cost)
-	fmt.Println("m1 out ...")
-}
-
-func m2(c *gin.Context) {
-	fmt.Println("m2 in ...")
-	c.Set("name", "qimi") //将数据放到c的上下文中给后面的使用
-	c.Next()
-	// c.Abort() //组织后续的处理函数，这里直接打印m2 out
-	fmt.Println("m2 out ...")
-}
-
-// func authMiddleware(c *gin.Context) {
-// 	//是否登陆判断
-// 	//if 是登陆用户
-// 	//c.Next
-// 	//else
-// 	//c.Abort
-// }
-
-//通常会用闭包 ，可以自己加参数
-func authMiddleware(doCheck bool) gin.HandlerFunc {
-	//连接数据库
-	//或者一些其他的准备工作
-	return func(c *gin.Context) {
-		if doCheck {
-			//存放具体的逻辑
-			//是否登陆判断
-			//if 是登陆用户
-			//c.Next
-			//else
-			//c.Abort
-		} else {
-			c.Next()
-		}
-
-	}
-}
-
-func StatCost(part string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		fmt.Println("你吗死了")
-		c.Next()
-		fmt.Println("我是你爹")
-	}
-}
-
-//go mod tidy 看依赖包是否在go mod 中列出来
 func main() {
-	// r := gin.Default()                  //默认使用了Logger()和Recovery()中间件
-	r := gin.New()                      //不想使用两个东西的话
-	r.Use(m1, m2, authMiddleware(true)) //全局注册中间件函数 ,打印顺序：m1 in ... ，m2 in ... ， index ,m2 out ...,cost:996.8µs  ,m1 out ...
-	// func (group *RouterGroup) GET(relativePath string, handlers ...HandlerFunc) IRoutes {
-	// r.GET("/index", m1, indexHandler)
-	r.GET("/index", indexHandler)
-	r.GET("/index1", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"messag": "这里是index2",
-		})
-	})
-
-	//为路由组注册
-	shopGroup := r.Group("/xx", StatCost("ning "))
-	{
-		shopGroup.GET("/index", func(c *gin.Context) {
-			c.JSON(http.StatusOK, gin.H{
-				"msg": "这里是路由组",
-			})
-		})
+	//连接数据库
+	db, err := gorm.Open("mysql", "root:root1234@(127.0.0.1:3306)/db1?charset=utf8mb4")
+	if err != nil {
+		panic(err)
 	}
+	defer db.Close()
 
-	r.Run(":8080")
-}
+	//创建表  自动迁移（把结构体和数据表进行对应）
+	db.AutoMigrate(&UserInfo{})
 
-func funcXX(c *gin.Context) {
-	fmt.Println("因为在这里如果直接使用c，会导致后面的处理程序的值是不确定的，并发不安全")
+	//创建数据行
+	u1 := UserInfo{1, "七米", "男", "蛙泳"} //生成的数据表的名字为user_infos
+	u2 := UserInfo{2, "无敌", "女", "足球"}
+	db.Create(&u1) //结构体对象比较大就可以传指针进来
+	db.Create(&u2)
+
+	//查询
+	// var u UserInfo
+	var u = new(UserInfo)
+	db.First(&u) //会修改变量 u,来保存查询的值
+	fmt.Printf("%#v\n", u)
+
+	var uu UserInfo
+	db.Find(&uu, "hobby=?", "足球")
+	fmt.Printf("%#v\n", uu)
+
+	//更新
+	db.Model(&u).Update("hobby", "双色球")
+	//删除
+	db.Delete(&u)
 }
