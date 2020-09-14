@@ -1,21 +1,36 @@
 package main
 
 import (
-	"fmt"
+	"database/sql"
+	"time"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
-//_ 表示没有直接用到他
-
-//UserInfo --> 数据表
-type UserInfo struct {
-	ID    uint
-	Name  string
-	Gener string
-	Hobby string
+//定义模型
+type User struct {
+	gorm.Model   //内嵌gorm.Model
+	Name         string
+	Age          sql.NullInt64 //零值类型
+	Birthday     *time.Time
+	Email        string  `gorm:"type:varchar(100);unique_index"`
+	Role         string  `gorm:"size:255"`        //设置字段大小255
+	MemberNumber *string `gorm:"unique;not null"` //设置会员号（member number )唯一 不为空
+	Num          int     `gorm:"AUTO_INCREMENT`   //设置num为自增类型
+	Address      string  `gorm:"index:addr"`      //给address字段创建名为addr的索引
+	IgnoreMe     int     `gorm:"-"`               //忽略本字段
 }
+
+type Animal struct {
+	AnimalID int64  `gorm:"primary_key"`
+	Name     string `gorm:"column:best_go"`
+	Age      int64
+}
+
+func (Animal) TableName() string {
+	return "qimi"
+} //设置自定义表明
 
 func main() {
 	//连接数据库
@@ -25,27 +40,16 @@ func main() {
 	}
 	defer db.Close()
 
-	//创建表  自动迁移（把结构体和数据表进行对应）
-	db.AutoMigrate(&UserInfo{})
+	//Gorm还支持更改默认表名称规则
+	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
+		return "prefix_" + defaultTableName //自定义的表明就不会加
+	}
 
-	//创建数据行
-	u1 := UserInfo{1, "七米", "男", "蛙泳"} //生成的数据表的名字为user_infos
-	u2 := UserInfo{2, "无敌", "女", "足球"}
-	db.Create(&u1) //结构体对象比较大就可以传指针进来
-	db.Create(&u2)
+	db.SingularTable(true) //禁用表的复数
 
-	//查询
-	// var u UserInfo
-	var u = new(UserInfo)
-	db.First(&u) //会修改变量 u,来保存查询的值
-	fmt.Printf("%#v\n", u)
+	db.AutoMigrate(&User{}) //创建表
+	db.AutoMigrate(&Animal{})
 
-	var uu UserInfo
-	db.Find(&uu, "hobby=?", "足球")
-	fmt.Printf("%#v\n", uu)
+	db.Table("uziniupi").CreateTable(&User{}) //使用user结构体创建一个名叫"uziniupi"的表
 
-	//更新
-	db.Model(&u).Update("hobby", "双色球")
-	//删除
-	db.Delete(&u)
 }
