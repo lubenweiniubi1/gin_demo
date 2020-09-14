@@ -2,35 +2,19 @@ package main
 
 import (
 	"database/sql"
-	"time"
+	"fmt"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
-//定义模型
+//首先定义模型：
 type User struct {
-	gorm.Model   //内嵌gorm.Model
-	Name         string
-	Age          sql.NullInt64 //零值类型
-	Birthday     *time.Time
-	Email        string  `gorm:"type:varchar(100);unique_index"`
-	Role         string  `gorm:"size:255"`        //设置字段大小255
-	MemberNumber *string `gorm:"unique;not null"` //设置会员号（member number )唯一 不为空
-	Num          int     `gorm:"AUTO_INCREMENT`   //设置num为自增类型
-	Address      string  `gorm:"index:addr"`      //给address字段创建名为addr的索引
-	IgnoreMe     int     `gorm:"-"`               //忽略本字段
-}
-
-type Animal struct {
-	AnimalID int64  `gorm:"primary_key"`
-	Name     string `gorm:"column:best_go"`
-	Age      int64
-}
-
-func (Animal) TableName() string {
-	return "qimi"
-} //设置自定义表明
+	ID int64
+	// Name *string `gorm:"default:'小王八'"` //使用指针方式实现零值存入数据库
+	Name sql.NullString `gorm:"default:'小王八'"` //使用Scanner/Valuer接口方式实现零值存入数据库
+	Age  int64
+} //修改 但是表结构没改过来,就删掉吧
 
 func main() {
 	//连接数据库
@@ -39,17 +23,16 @@ func main() {
 		panic(err)
 	}
 	defer db.Close()
+	//2. 把模型与数据库中的表对应起来
+	db.AutoMigrate(&User{})
 
-	//Gorm还支持更改默认表名称规则
-	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
-		return "prefix_" + defaultTableName //自定义的表明就不会加
-	}
-
-	db.SingularTable(true) //禁用表的复数
-
-	db.AutoMigrate(&User{}) //创建表
-	db.AutoMigrate(&Animal{})
-
-	db.Table("uziniupi").CreateTable(&User{}) //使用user结构体创建一个名叫"uziniupi"的表
+	//3.创建
+	// user := User{Age: 29}           //在代码层创建一个User对象,不写名字 默认就是空串
+	// user := User{Name: "", Age: 52} //这里的名字还是小王八 ,用的默认值,也就是说你输入零值 和不写没有区别
+	// user := User{Name: new(string), Age: 52} //当我不传的时候 你使用小王八 ,我传了值的时候 我传什么你写什么 ,new(string) 获取空字符串指针
+	user := User{Name: sql.NullString{String: "", Valid: true}, Age: 512412} //...不可能用这个了
+	fmt.Println(db.NewRecord(user))                                          //检查主键是否为空，主键一般由数据库来生成，如果为true说明还没被创建，如果为false，说明数据库里由这个东西了，不能再创建了
+	db.Debug().Create(&user)                                                 //在数据库中创建了一条 七米 78的记录
+	fmt.Println(db.NewRecord(user))
 
 }

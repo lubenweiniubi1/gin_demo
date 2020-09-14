@@ -1,28 +1,11 @@
-##  GORM
-
-#### 什么是ORM？
-
-Object Relational Mapping（对象  关系 映射）
-
-+ Object:程序中的对象/实例，比如go中的结构体实例
-+ Relational:关系型数据库，例如mysql
-+ Mapping：一个实例对应数据库中的一条数据
+ **注意：**通过tag定义字段的默认值，在创建记录时候生成的 SQL 语句会排除没有值或值为 零值 的字段。 在将记录插入到数据库后，Gorm会从数据库加载那些字段的默认值。
 
 ```go
-type UserInfo struct {
-    ID uint 
-    Name string 
-    Gender string
-}
+user := User{Name: "", Age: 52} 
+//打断点
+db.Debug().Create(&user) 
 
-func main(){
-    u1:=UserInfo{1,"七米","男"}
-    //将u1数据存入数据库
-   // insert into userinfo values(1,"七米","男") sql语句
-    orm.Create(&u1) //orm工具提供的orm语句
-}
+
+[2020-09-14 22:41:49]  [10.98ms]  INSERT INTO `users` (`age`) VALUES (52)
 ```
 
-![go1](D:\gin_demo\go1.png)
-
-> https://www.liwenzhou.com/posts/Go/gorm/
