@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 
 	"github.com/jinzhu/gorm"
@@ -10,11 +9,10 @@ import (
 
 //首先定义模型：
 type User struct {
-	ID int64
-	// Name *string `gorm:"default:'小王八'"` //使用指针方式实现零值存入数据库
-	Name sql.NullString `gorm:"default:'小王八'"` //使用Scanner/Valuer接口方式实现零值存入数据库
+	gorm.Model
+	Name string
 	Age  int64
-} //修改 但是表结构没改过来,就删掉吧
+}
 
 func main() {
 	//连接数据库
@@ -23,16 +21,42 @@ func main() {
 		panic(err)
 	}
 	defer db.Close()
-	//2. 把模型与数据库中的表对应起来
+
 	db.AutoMigrate(&User{})
 
-	//3.创建
-	// user := User{Age: 29}           //在代码层创建一个User对象,不写名字 默认就是空串
-	// user := User{Name: "", Age: 52} //这里的名字还是小王八 ,用的默认值,也就是说你输入零值 和不写没有区别
-	// user := User{Name: new(string), Age: 52} //当我不传的时候 你使用小王八 ,我传了值的时候 我传什么你写什么 ,new(string) 获取空字符串指针
-	user := User{Name: sql.NullString{String: "", Valid: true}, Age: 512412} //...不可能用这个了
-	fmt.Println(db.NewRecord(user))                                          //检查主键是否为空，主键一般由数据库来生成，如果为true说明还没被创建，如果为false，说明数据库里由这个东西了，不能再创建了
-	db.Debug().Create(&user)                                                 //在数据库中创建了一条 七米 78的记录
-	fmt.Println(db.NewRecord(user))
+	// user := User{Name: "qimi", Age: 418}
+	// user1 := User{Name: "uzi", Age: 18}
+
+	// db.Create(&user)
+	// db.Create(&user1)
+
+	if false {
+		//一般查询
+		var user User
+		db.First(&user)
+		// fmt.Println(user)
+
+		var users []User
+		db.Debug().Find(&users) //查询所有记录
+		// fmt.Printf("users:%#v\n", users)
+
+		//where
+		var user2 User
+		db.Where("name = ?", "qimi").First(&user2)
+		fmt.Printf("users:%#v\n", user2)
+
+		// db.Where("name = ?", "qimi").First(&user)
+		// fmt.Printf("users:%#v\n", user) //好像是多携程的，别用同一个变凉了
+	}
+
+	//FirstOrInit
+	var user1 User
+	db.Attrs(User{Age: 100}).FirstOrInit(&user1, User{Name: "non_existing"})
+	// fmt.Printf("user:%#v\n", user1) //Name:"non_existing", Age:100
+
+	var user3 User
+	// 未找到,Assgin没卵用
+	db.Assign(User{Age: 20}).FirstOrInit(&user3, User{Name: "uzi"})
+	fmt.Printf("user:%#v\n", user3) //Name:"non_existing", Age:100
 
 }
