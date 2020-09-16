@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
@@ -10,8 +8,9 @@ import (
 //首先定义模型：
 type User struct {
 	gorm.Model
-	Name string
-	Age  int64
+	Name   string
+	Age    int64
+	Active bool
 }
 
 func main() {
@@ -24,39 +23,19 @@ func main() {
 
 	db.AutoMigrate(&User{})
 
-	// user := User{Name: "qimi", Age: 418}
-	// user1 := User{Name: "uzi", Age: 18}
+	// user1 := User{Name: "qimi", Age: 20, Active: true}
+	// user2 := User{Name: "uzi", Age: 18, Active: false}
 
-	// db.Create(&user)
+	// db.Create(&user2)
 	// db.Create(&user1)
 
-	if false {
-		//一般查询
-		var user User
-		db.First(&user)
-		// fmt.Println(user)
+	var user User
+	db.First(&user)
 
-		var users []User
-		db.Debug().Find(&users) //查询所有记录
-		// fmt.Printf("users:%#v\n", users)
+	//6.更新
+	// user.Name = "1"
+	// db.Save(&user) //默认修改所有字段,其他没设的字段就没了
 
-		//where
-		var user2 User
-		db.Where("name = ?", "qimi").First(&user2)
-		fmt.Printf("users:%#v\n", user2)
-
-		// db.Where("name = ?", "qimi").First(&user)
-		// fmt.Printf("users:%#v\n", user) //好像是多携程的，别用同一个变凉了
-	}
-
-	//FirstOrInit
-	var user1 User
-	db.Attrs(User{Age: 100}).FirstOrInit(&user1, User{Name: "non_existing"})
-	// fmt.Printf("user:%#v\n", user1) //Name:"non_existing", Age:100
-
-	var user3 User
-	// 未找到,Assgin没卵用
-	db.Assign(User{Age: 20}).FirstOrInit(&user3, User{Name: "uzi"})
-	fmt.Printf("user:%#v\n", user3) //Name:"non_existing", Age:100
-
+	// db.Debug().Delete(&user)
+	// db.Unscoped().Delete(&user)
 }
