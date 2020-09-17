@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -68,7 +69,16 @@ func main() {
 		})
 		//查看所有代办事项
 		v1Group.GET("/todo", func(c *gin.Context) {
+			//查询todo这个表所有数据
+			var todoList []Todo
 
+			if err = DB.Find(&todoList).Error; err != nil {
+				c.JSON(http.StatusOK, gin.H{
+					"error": err.Error(),
+				})
+			} else {
+				c.JSON(http.StatusOK, todoList)
+			}
 		})
 		//查看某一个待办事项
 		v1Group.GET("/todo/:id", func(c *gin.Context) {
@@ -76,14 +86,41 @@ func main() {
 		})
 		//修改
 		v1Group.PUT("/todo/:id", func(c *gin.Context) {
-
+			id, ok := c.Params.Get("id")
+			if !ok {
+				c.JSON(http.StatusOK, gin.H{
+					"error": "无效的id",
+				})
+			}
+			var todo Todo
+			if err = DB.Where("id=?", id).First(&todo).Error; err != nil {
+				c.JSON(http.StatusOK, gin.H{"error": err.Error()})
+				return //不然会继续往下面执行
+			}
+			c.BindJSON(&todo)
+			fmt.Printf("user:%#v", &todo)
+			if err = DB.Save(&todo).Error; err != nil {
+				c.JSON(http.StatusOK, gin.H{"error": err.Error()})
+			} else {
+				c.JSON(http.StatusOK, todo)
+			}
 		})
 		//删除
 		v1Group.DELETE("/todo/:id", func(c *gin.Context) {
-
+			id, ok := c.Params.Get("id")
+			if !ok {
+				c.JSON(http.StatusOK, gin.H{"error": "无效的id"})
+			}
+			if err = DB.Where("id=?", id).Delete(Todo{}).Error; err != nil {
+				c.JSON(http.StatusOK, gin.H{"error": err.Error()})
+			} else {
+				c.JSON(http.StatusOK, gin.H{
+					id: "deleted",
+				})
+			}
 		})
 	}
 
-	r.Run()
+	r.Run(":9000")
 
 }
